@@ -6,6 +6,8 @@ import {developmentChains, networkConfig} from '../../helper-hardhat-config'
 import {Raffle, VRFCoordinatorV2Mock} from '../../typechain-types'
 import {SignerWithAddress} from '@nomicfoundation/hardhat-ethers/signers'
 
+const chainId = network.config.chainId || 31337
+
 if (!developmentChains.includes(network.name)) {
   describe.skip
 } else {
@@ -30,11 +32,18 @@ if (!developmentChains.includes(network.name)) {
     describe('constructor', () => {
       it('initialiazes the raffle contract correctly', async () => {
         const raffleState = await raffle.getRaffleState()
-        assert.equal(raffleState.toString(), '0')
         const interval = await raffle.getInterval()
         const entranceFee = await raffle.getEntranceFee()
-        console.log('interval', interval.toString())
-        console.log('entranceFee', entranceFee.toString())
+
+        assert.equal(raffleState.toString(), '0')
+        assert.equal(
+          interval.toString(),
+          networkConfig[chainId].keepersUpdateInterval,
+        )
+        assert.equal(
+          entranceFee.toString(),
+          networkConfig[chainId].raffleEntranceFee,
+        )
       })
     })
   })
