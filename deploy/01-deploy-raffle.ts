@@ -2,13 +2,16 @@ import {Addressable} from 'ethers'
 import {ethers} from 'hardhat'
 import {DeployFunction} from 'hardhat-deploy/types'
 import {HardhatRuntimeEnvironment} from 'hardhat/types'
-import {networkConfig} from '../helper-hardhat-config'
+import {developmentChains, networkConfig} from '../helper-hardhat-config'
 import {VRFCoordinatorV2Mock} from '../typechain-types'
+import verify from '../utils/verify'
 
-const FUND_AMOUNT = ethers.parseEther('1').toString()
+const FUND_AMOUNT = ethers.parseEther('1')
 
-const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-  console.log('Deploying FundMe contract...')
+const deployRaffle: DeployFunction = async function (
+  hre: HardhatRuntimeEnvironment,
+) {
+  console.log('Deploying Raffle contract...')
   const {deployments, getNamedAccounts, network} = hre
   const {deploy, log} = deployments
   const {deployer} = await getNamedAccounts()
@@ -20,17 +23,29 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const vrfCoordinatorV2Mock: VRFCoordinatorV2Mock = await ethers.getContract(
       'VRFCoordinatorV2Mock',
     )
-    // const vrfCoordinatorV2Mock = await deployments.get('VRFCoordinatorV2Mock')
+
     vrfCoordinatorV2Address = vrfCoordinatorV2Mock.target
+
     const transactionResponse = await vrfCoordinatorV2Mock.createSubscription()
-    const transactionReceipt = (await transactionResponse.wait(1)) as any
+    const transactionReceipt = await transactionResponse.wait(1)
+    const filter = vrfCoordinatorV2Mock.filters.SubscriptionCreated()
 
-    log('VRFCoordinatorV2Mock.createSubscription() transactionReceipt:', {
-      transactionReceipt,
-    })
+    if (!transactionReceipt) {
+      throw new Error('No transaction receipt')
+    }
+    const logs = await vrfCoordinatorV2Mock.queryFilter(
+      filter,
+      transactionReceipt.blockHash,
+    )
+    if (!logs || logs.length === 0) {
+      throw new Error('No logs found')
+    }
+    const event = logs[0]
 
-    subscriptionId = transactionReceipt.events[0].args.subId as string
-    // fund subscription
+    const args = event.args
+
+    subscriptionId = args[0].toString()
+
     await vrfCoordinatorV2Mock.fundSubscription(subscriptionId, FUND_AMOUNT)
   } else {
     if (!networkConfig[chainId].vrfCoordinatorV2) {
@@ -51,10 +66,23 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     callbackGasLimit,
     interval,
   ]
+
+  console.log('Deployment args:', args)
   const raffle = await deploy('Raffle', {
     from: deployer,
     args,
     log: true,
     waitConfirmations: 1,
   })
+
+  if (
+    !developmentChains.includes(network.name) &&
+    process.env.ETHERSCAN_API_KEY
+  ) {
+    log('Verifying...')
+    await verify(raffle.address, args)
+  }
 }
+
+export default deployRaffle
+deployRaffle.tags = ['all', 'raffle']
