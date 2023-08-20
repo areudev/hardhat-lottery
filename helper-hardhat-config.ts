@@ -39,3 +39,5 @@ export const networkConfig: networkConfigInfo = {
     keepersUpdateInterval: '30',
   },
 }
+
+export const developmentChains = ['hardhat', 'localhost']
