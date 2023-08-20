@@ -16,6 +16,7 @@ if (!developmentChains.includes(network.name)) {
     let vrfCoordinatorV2Mock: VRFCoordinatorV2Mock
     let deployer: SignerWithAddress
     let player: SignerWithAddress
+    let entranceFee: BigNumberish
 
     beforeEach(async () => {
       // const {deployer} = await ethers.getNamedSigners()
@@ -27,13 +28,13 @@ if (!developmentChains.includes(network.name)) {
         deployer,
       )
       raffle = await ethers.getContract('Raffle', deployer)
+      entranceFee = await raffle.getEntranceFee()
     })
 
     describe('constructor', () => {
       it('initialiazes the raffle contract correctly', async () => {
         const raffleState = await raffle.getRaffleState()
         const interval = await raffle.getInterval()
-        const entranceFee = await raffle.getEntranceFee()
 
         assert.equal(raffleState.toString(), '0')
         assert.equal(
@@ -44,6 +45,22 @@ if (!developmentChains.includes(network.name)) {
           entranceFee.toString(),
           networkConfig[chainId].raffleEntranceFee,
         )
+      })
+    })
+    describe('enterRaffle', () => {
+      it('reverts when you dont pay enough', async () => {
+        await expect(
+          raffle.enterRaffle({
+            value: ethers.parseEther('0.000000000000000001'),
+          }),
+        ).to.be.revertedWith('Not enough value sent')
+      })
+      it('records the player', async () => {
+        await raffle.enterRaffle({
+          value: entranceFee,
+        })
+        const playerFromContract = await raffle.getPlayer(0)
+        assert.equal(playerFromContract, deployer.address)
       })
     })
   })

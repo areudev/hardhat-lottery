@@ -15,13 +15,10 @@ const config: HardhatUserConfig = {
   defaultNetwork: 'hardhat',
   networks: {
     hardhat: {
-      // // If you want to do some forking, uncomment this
-      // forking: {
-      //   url: MAINNET_RPC_URL
-      // }
       chainId: 31337,
     },
     localhost: {
+      url: 'http://127.0.0.1:8545/',
       chainId: 31337,
     },
     sepolia: {
@@ -29,6 +26,17 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 11155111,
     },
+  },
+  etherscan: {
+    apiKey: ETHERSCAN_API_KEY,
+  },
+  gasReporter: {
+    enabled: false,
+    outputFile: 'gas-report.txt',
+    noColors: true,
+    currency: 'USD',
+    token: 'MATIC',
+    // coinmarketcap: COINMARKETCAP_API_KEY,
   },
   solidity: '0.8.19',
   namedAccounts: {

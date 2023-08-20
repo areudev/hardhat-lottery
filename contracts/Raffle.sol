@@ -70,14 +70,14 @@ contract Raffle is VRFConsumerBaseV2, AutomationCompatibleInterface {
     }
 
     function enterRaffle() public payable {
-        // require(msg.value >= i_entranceFee, "Not enough value sent");
-        // require(s_raffleState == RaffleState.OPEN, "Raffle is not open");
-        if (msg.value < i_entranceFee) {
-            revert Raffle__SendMoreToEnterRaffle();
-        }
-        if (s_raffleState != RaffleState.OPEN) {
-            revert Raffle__RaffleNotOpen();
-        }
+        require(msg.value >= i_entranceFee, "Not enough value sent");
+        require(s_raffleState == RaffleState.OPEN, "Raffle is not open");
+        // if (msg.value < i_entranceFee) {
+        //     revert Raffle__SendMoreToEnterRaffle();
+        // }
+        // if (s_raffleState != RaffleState.OPEN) {
+        //     revert Raffle__RaffleNotOpen();
+        // }
         s_players.push(payable(msg.sender));
         // Emit an event when we update a dynamic array or mapping
         // Named events with the function name reversed
