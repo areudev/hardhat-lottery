@@ -1,4 +1,4 @@
-import {Addressable} from 'ethers'
+import {Addressable, EventLog} from 'ethers'
 import {ethers} from 'hardhat'
 import {DeployFunction} from 'hardhat-deploy/types'
 import {HardhatRuntimeEnvironment} from 'hardhat/types'
@@ -45,6 +45,7 @@ const deployRaffle: DeployFunction = async function (
     const args = event.args
 
     subscriptionId = args[0].toString()
+    console.log('Subscription ID:', subscriptionId)
 
     await vrfCoordinatorV2Mock.fundSubscription(subscriptionId, FUND_AMOUNT)
   } else {

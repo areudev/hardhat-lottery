@@ -5,6 +5,7 @@ import {network, deployments, ethers} from 'hardhat'
 import {developmentChains, networkConfig} from '../../helper-hardhat-config'
 import {Raffle, VRFCoordinatorV2Mock} from '../../typechain-types'
 import {SignerWithAddress} from '@nomicfoundation/hardhat-ethers/signers'
+import {mine, time} from '@nomicfoundation/hardhat-toolbox/network-helpers'
 
 const chainId = network.config.chainId || 31337
 
@@ -17,6 +18,7 @@ if (!developmentChains.includes(network.name)) {
     let deployer: SignerWithAddress
     let player: SignerWithAddress
     let entranceFee: BigNumberish
+    let interval: BigNumberish
 
     beforeEach(async () => {
       // const {deployer} = await ethers.getNamedSigners()
@@ -29,12 +31,12 @@ if (!developmentChains.includes(network.name)) {
       )
       raffle = await ethers.getContract('Raffle', deployer)
       entranceFee = await raffle.getEntranceFee()
+      interval = await raffle.getInterval()
     })
 
     describe('constructor', () => {
       it('initialiazes the raffle contract correctly', async () => {
         const raffleState = await raffle.getRaffleState()
-        const interval = await raffle.getInterval()
 
         assert.equal(raffleState.toString(), '0')
         assert.equal(
@@ -67,6 +69,22 @@ if (!developmentChains.includes(network.name)) {
           raffle,
           'RaffleEnter',
         )
+      })
+      it('doesnt allow entrance when raffle is calculating', async () => {
+        await raffle.enterRaffle({value: entranceFee})
+        // const unlockTime = (await time.latest()) + 30
+        // await time.increaseTo(unlockTime)
+        // await network.provider.send('evm_increaseTime', [30 + 1])
+        // await time.increase(interval + 1)
+        await time.increase(ethers.toNumber(interval) + 1)
+        // await time.increase(30 + 1)
+        // await mine(10)
+
+        // await raffle.performUpkeep('')
+        await raffle.performUpkeep(ethers.encodeBytes32String('test'))
+        await expect(
+          raffle.enterRaffle({value: entranceFee}),
+        ).to.be.revertedWith('Raffle is not open')
       })
     })
   })
