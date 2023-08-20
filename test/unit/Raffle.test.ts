@@ -62,6 +62,12 @@ if (!developmentChains.includes(network.name)) {
         const playerFromContract = await raffle.getPlayer(0)
         assert.equal(playerFromContract, deployer.address)
       })
+      it('emmits event on enter', async () => {
+        await expect(raffle.enterRaffle({value: entranceFee})).to.emit(
+          raffle,
+          'RaffleEnter',
+        )
+      })
     })
   })
 }
