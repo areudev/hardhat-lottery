@@ -72,10 +72,6 @@ if (!developmentChains.includes(network.name)) {
       })
       it('doesnt allow entrance when raffle is calculating', async () => {
         await raffle.enterRaffle({value: entranceFee})
-        // const unlockTime = (await time.latest()) + 30
-        // await time.increaseTo(unlockTime)
-        // await network.provider.send('evm_increaseTime', [30 + 1])
-        // await time.increase(interval + 1)
         await time.increase(ethers.toNumber(interval) + 1)
         // await time.increase(30 + 1)
         // await mine(10)
