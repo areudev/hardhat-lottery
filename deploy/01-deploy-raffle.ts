@@ -58,13 +58,14 @@ const deployRaffle: DeployFunction = async function (
   const gasLane = networkConfig[chainId].gasLane
   const callbackGasLimit = networkConfig[chainId].callbackGasLimit
   const interval = networkConfig[chainId].keepersUpdateInterval
+  // const interval = '30'
   const args = [
     vrfCoordinatorV2Address,
-    entranceFee,
-    gasLane,
     subscriptionId,
-    callbackGasLimit,
+    gasLane,
     interval,
+    entranceFee,
+    callbackGasLimit,
   ]
 
   console.log('Deployment args:', args)

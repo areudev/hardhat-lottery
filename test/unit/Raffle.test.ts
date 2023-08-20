@@ -28,7 +28,14 @@ if (!developmentChains.includes(network.name)) {
     })
 
     describe('constructor', () => {
-      it('initialiazes the raffle contract correctly', async () => {})
+      it('initialiazes the raffle contract correctly', async () => {
+        const raffleState = await raffle.getRaffleState()
+        assert.equal(raffleState.toString(), '0')
+        const interval = await raffle.getInterval()
+        const entranceFee = await raffle.getEntranceFee()
+        console.log('interval', interval.toString())
+        console.log('entranceFee', entranceFee.toString())
+      })
     })
   })
 }
