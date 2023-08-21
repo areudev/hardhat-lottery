@@ -92,6 +92,54 @@ if (!developmentChains.includes(network.name)) {
         const {upkeepNeeded} = await raffle.checkUpkeep.staticCall('0x')
         assert(!upkeepNeeded)
       })
+      it('returns false if raffle isnt open', async () => {
+        await raffle.enterRaffle({value: entranceFee})
+        await time.increase(ethers.toNumber(interval) + 1)
+
+        await raffle.performUpkeep('0x')
+        const {upkeepNeeded} = await raffle.checkUpkeep.staticCall('0x')
+        assert.equal(upkeepNeeded, false)
+        const raffleState = await raffle.getRaffleState()
+        assert.equal(raffleState.toString(), '1')
+      })
+    })
+
+    describe('performUpkeep', () => {
+      it('can only run if checkupkeep is true', async () => {
+        await raffle.enterRaffle({value: entranceFee})
+        await time.increase(ethers.toNumber(interval) + 1)
+        const tx = await raffle.performUpkeep('0x')
+        assert(tx)
+      })
+      it('reverts if checkupkeep is false', async () => {
+        // await raffle.performUpkeep(ethers.encodeBytes32String('test'))
+        await expect(
+          raffle.performUpkeep(ethers.encodeBytes32String('test')),
+        ).to.be.revertedWith('Upkeep not needed')
+      })
+      it('updates the raffle state and emits a requestId', async () => {
+        await raffle.enterRaffle({value: entranceFee})
+        await time.increase(ethers.toNumber(interval) + 1)
+        const tx = await raffle.performUpkeep('0x')
+        const txReceipt = await tx.wait(1)
+        if (!txReceipt) {
+          throw new Error('No transaction receipt')
+        }
+        const logs = await raffle.queryFilter(
+          raffle.filters.RequestedRaffleWinner(),
+          txReceipt.blockHash,
+        )
+        const requestId = logs[0].args?.requestId
+        // console.log('logs', logs)
+        // console.log('requestId', requestId)
+        const raffleState = await raffle.getRaffleState()
+
+        assert.equal(raffleState.toString(), '1')
+        assert(ethers.toNumber(requestId) > 0)
+
+        // console.log('txReceipt', txReceipt?.logs[0])
+        // console.log('raffleState', raffleState.toString())
+      })
     })
   })
 }
