@@ -83,6 +83,16 @@ if (!developmentChains.includes(network.name)) {
         ).to.be.revertedWith('Raffle is not open')
       })
     })
+    describe('checkUpkeep', () => {
+      it('returns false if people havent sent any ETH', async () => {
+        // await raffle.enterRaffle({value: entranceFee})
+        await time.increase(ethers.toNumber(interval) + 1)
+        mine(10)
+
+        const {upkeepNeeded} = await raffle.checkUpkeep.staticCall('0x')
+        assert(!upkeepNeeded)
+      })
+    })
   })
 }
 
