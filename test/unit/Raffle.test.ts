@@ -189,11 +189,11 @@ if (!developmentChains.includes(network.name)) {
               assert.equal(raffleState.toString(), '0')
               assert(lastTimeStamp > startingTimestamp)
               assert.equal(recentWinner, accounts[startingIndex].address)
-              assert(
+              assert.equal(
                 winnerBalanceEnd.toString(),
                 (
                   winnerBalanceStart +
-                  entranceFee * BigInt(additionalEntrances.toString())
+                  entranceFee * BigInt(additionalEntrances + 1)
                 ).toString(),
               )
             } catch (e) {
